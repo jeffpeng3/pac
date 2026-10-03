@@ -1,16 +1,28 @@
 services:
-  pac:
-    build: .
-    image: pac-server:latest
-    ports:
-      - "8080:8080"
+  warp-pac:
+    image: ghcr.io/jeffpeng3/pac:latest
+    restart: always
+    device_cgroup_rules:
+      - 'c 10:200 rwm'
     environment:
-      PROXY_TYPE: PROXY
-      PROXY_ADDR: 192.168.1.1:7890
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/healthz"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 5s
+      # 有買 WARP+ 才填，沒有就留空
+      - WARP_LICENSE_KEY=
+    cap_add:
+      # Docker already have them, these are for podman users
+      - MKNOD
+      - AUDIT_WRITE
+      # additional required cap for warp, both for podman and docker
+      - NET_ADMIN
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv4.conf.all.src_valid_mark=1
+    volumes:
+      - ./data:/var/lib/cloudflare-warp
+    networks:
+      macvlan-lan:
+        ipv4_address: ${CONTAINER_IP:?請設定容器 macvlan IP，例如 CONTAINER_IP=192.168.1.100}
+
+networks:
+  macvlan-lan:
+    name: docker_lan
+    external: true

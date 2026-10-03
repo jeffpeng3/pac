@@ -1,5 +1,5 @@
 function FindProxyForURL(url, host) {
-  // PROXY_TYPE / PROXY_ADDR 由容器啟動時經環境變數代入，無密碼
+  // 同容器 WARP 的 SOCKS5，IP 由 server 開機偵測本機 LAN IP 代入
   var proxy = "__PROXY_TYPE__ __PROXY_ADDR__; DIRECT";
 
   host = host.toLowerCase();
