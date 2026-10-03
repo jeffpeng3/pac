@@ -8,10 +8,6 @@ services:
       # 有買 WARP+ 才填，沒有就留空
       - WARP_LICENSE_KEY=
     cap_add:
-      # Docker already have them, these are for podman users
-      - MKNOD
-      - AUDIT_WRITE
-      # additional required cap for warp, both for podman and docker
       - NET_ADMIN
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
