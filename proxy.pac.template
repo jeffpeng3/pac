@@ -1,0 +1,87 @@
+function FindProxyForURL(url, host) {
+  // PROXY_TYPE / PROXY_ADDR 由容器啟動時經環境變數代入，無密碼
+  var proxy = "__PROXY_TYPE__ __PROXY_ADDR__; DIRECT";
+
+  host = host.toLowerCase();
+
+  // 內網、localhost、無點 hostname 直接連，不進代理
+  if (isPlainHostName(host)) {
+    return "DIRECT";
+  }
+  if (shExpMatch(host, "*.local") || shExpMatch(host, "*.lan") ||
+      shExpMatch(host, "*.localdomain") || shExpMatch(host, "*.invalid")) {
+    return "DIRECT";
+  }
+
+  // Fastly 官方 hostname 快速通道，不用 DNS
+  if (shExpMatch(host, "*.fastly.net") ||
+      shExpMatch(host, "*.fastlylb.net") ||
+      shExpMatch(host, "*.fast.ly") ||
+      shExpMatch(host, "*.map.fastly.net") ||
+      shExpMatch(host, "*.global.ssl.fastly.net") ||
+      shExpMatch(host, "*.freetls.fastly.net") ||
+      shExpMatch(host, "*.global.prod.fastly.net") ||
+      dnsDomainIs(host, ".fastly.net") ||
+      dnsDomainIs(host, ".fastlylb.net")) {
+    return proxy;
+  }
+
+  // 已經是 IP 字串的請求：不用 dnsResolve，直接比對
+  if (shExpMatch(host, "*.*.*.*")) {
+    if (isInNet(host, "10.0.0.0", "255.0.0.0") ||
+        isInNet(host, "172.16.0.0", "255.240.0.0") ||
+        isInNet(host, "192.168.0.0", "255.255.0.0") ||
+        isInNet(host, "127.0.0.0", "255.0.0.0")) {
+      return "DIRECT";
+    }
+    if (isFastlyIP(host)) {
+      return proxy;
+    }
+    return "DIRECT";
+  }
+
+  // 一般 hostname：只 resolve 一次
+  var ip = "";
+  try {
+    ip = dnsResolve(host);
+  } catch (e) {
+    return "DIRECT";
+  }
+  if (!ip) {
+    return "DIRECT";
+  }
+  if (isInNet(ip, "10.0.0.0", "255.0.0.0") ||
+      isInNet(ip, "172.16.0.0", "255.240.0.0") ||
+      isInNet(ip, "192.168.0.0", "255.255.0.0") ||
+      isInNet(ip, "127.0.0.0", "255.0.0.0")) {
+    return "DIRECT";
+  }
+  if (isFastlyIP(ip)) {
+    return proxy;
+  }
+  return "DIRECT";
+}
+
+function isFastlyIP(ip) {
+  // 來源 https://api.fastly.com/public-ip-list，IPv4 段
+  // IPv6 段 2a04:4e40::/32、2a04:4e42::/32 傳統 PAC 無法比對，略過
+  return isInNet(ip, "23.235.32.0", "255.255.240.0") ||
+    isInNet(ip, "43.249.72.0", "255.255.252.0") ||
+    isInNet(ip, "103.244.50.0", "255.255.255.0") ||
+    isInNet(ip, "103.245.222.0", "255.255.254.0") ||
+    isInNet(ip, "103.245.224.0", "255.255.255.0") ||
+    isInNet(ip, "104.156.80.0", "255.255.240.0") ||
+    isInNet(ip, "140.248.64.0", "255.255.192.0") ||
+    isInNet(ip, "140.248.128.0", "255.255.128.0") ||
+    isInNet(ip, "146.75.0.0", "255.255.128.0") ||
+    isInNet(ip, "151.101.0.0", "255.255.0.0") ||
+    isInNet(ip, "157.52.64.0", "255.255.192.0") ||
+    isInNet(ip, "167.82.0.0", "255.255.128.0") ||
+    isInNet(ip, "167.82.128.0", "255.255.240.0") ||
+    isInNet(ip, "167.82.160.0", "255.255.240.0") ||
+    isInNet(ip, "167.82.224.0", "255.255.240.0") ||
+    isInNet(ip, "172.111.64.0", "255.255.192.0") ||
+    isInNet(ip, "185.31.16.0", "255.255.252.0") ||
+    isInNet(ip, "199.27.72.0", "255.255.248.0") ||
+    isInNet(ip, "199.232.0.0", "255.255.0.0");
+}
