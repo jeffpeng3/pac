@@ -13,6 +13,16 @@ function FindProxyForURL(url, host) {
     return "DIRECT";
   }
 
+  // 指定分流網域，純字串比對，不觸發 DNS
+  if (shExpMatch(host, "github.com") || shExpMatch(host, "*.github.com") ||
+      shExpMatch(host, "*.githubusercontent.com") || shExpMatch(host, "*.github.io") ||
+      shExpMatch(host, "x.com") || shExpMatch(host, "*.x.com") ||
+      shExpMatch(host, "twitter.com") || shExpMatch(host, "*.twitter.com") ||
+      shExpMatch(host, "*.twimg.com") ||
+      shExpMatch(host, "reddit.com") || shExpMatch(host, "*.reddit.com")) {
+    return proxy;
+  }
+
   // Fastly 官方 hostname 快速通道，不用 DNS
   if (shExpMatch(host, "*.fastly.net") ||
       shExpMatch(host, "*.fastlylb.net") ||

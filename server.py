@@ -1,7 +1,7 @@
 """Serve proxy.pac rendered from proxy.pac.template with env config.
 
 Env:
-  PROXY_TYPE: PROXY or SOCKS5 (default PROXY)
+  PROXY_TYPE: PROXY, SOCKS5 or SOCKS (default PROXY)
   PROXY_ADDR: host:port (default 127.0.0.1:7890)
   PORT: listen port (default 8080)
 
@@ -16,7 +16,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 TEMPLATE = HERE / "proxy.pac.template"
 MIME = "application/x-ns-proxy-autoconfig"
-ALLOWED_TYPES = {"PROXY", "SOCKS5"}
+ALLOWED_TYPES = {"PROXY", "SOCKS5", "SOCKS"}
 
 
 def render() -> bytes:
